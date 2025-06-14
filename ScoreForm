@@ -1,0 +1,154 @@
+package project1;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.List;
+
+public class ScoreForm extends JFrame {
+    private JComboBox<String> cbStudentNumber;  // JComboBox로 변경
+    private JTextField tfSubject, tfScore;
+    private JTable table;
+    private DefaultTableModel model;
+    private ScoreDAO scoreDAO = new ScoreDAO();
+    private StudentDAO studentDAO = new StudentDAO();  // 학생DAO 추가
+
+    public ScoreForm() {
+        setTitle("성적 관리");
+        setSize(600, 400);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        JPanel inputPanel = new JPanel(new GridLayout(4, 2));
+        cbStudentNumber = new JComboBox<>();   // 콤보박스 초기화
+        tfSubject = new JTextField();
+        tfScore = new JTextField();
+
+        // 학생 번호 목록을 콤보박스에 채우기
+        loadStudentNumbers();
+
+        inputPanel.add(new JLabel("학번"));
+        inputPanel.add(cbStudentNumber);
+        inputPanel.add(new JLabel("과목"));
+        inputPanel.add(tfSubject);
+        inputPanel.add(new JLabel("점수"));
+        inputPanel.add(tfScore);
+
+        JPanel btnPanel = new JPanel();
+        JButton addBtn = new JButton("등록");
+        JButton updateBtn = new JButton("수정");
+        JButton deleteBtn = new JButton("삭제");
+        btnPanel.add(addBtn);
+        btnPanel.add(updateBtn);
+        btnPanel.add(deleteBtn);
+
+        model = new DefaultTableModel(new String[]{"ID", "학번", "과목", "점수", "등급"}, 0);
+        table = new JTable(model);
+        JScrollPane scrollPane = new JScrollPane(table);
+
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(inputPanel, BorderLayout.NORTH);
+        topPanel.add(btnPanel, BorderLayout.SOUTH);
+
+        add(topPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+
+        loadTable();
+
+        addBtn.addActionListener(e -> {
+            try {
+                String studentNumber = (String) cbStudentNumber.getSelectedItem();
+                String subject = tfSubject.getText();
+                int score = Integer.parseInt(tfScore.getText());
+                Score s = new Score(studentNumber, subject, score);
+                if (scoreDAO.insertScore(s)) {
+                    JOptionPane.showMessageDialog(this, "성적 등록 성공");
+                    loadTable();
+                } else {
+                    JOptionPane.showMessageDialog(this, "등록 실패");
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "점수는 숫자여야 합니다.");
+            }
+        });
+
+        updateBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                try {
+                    int id = Integer.parseInt(model.getValueAt(row, 0).toString());
+                    String studentNumber = (String) cbStudentNumber.getSelectedItem();
+                    String subject = tfSubject.getText();
+                    int score = Integer.parseInt(tfScore.getText());
+                    Score s = new Score(id, studentNumber, subject, score);
+                    if (scoreDAO.updateScore(s)) {
+                        JOptionPane.showMessageDialog(this, "수정 성공");
+                        loadTable();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "수정 실패");
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "점수는 숫자여야 합니다.");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "수정할 항목을 선택하세요.");
+            }
+        });
+
+        deleteBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                int id = Integer.parseInt(model.getValueAt(row, 0).toString());
+                if (scoreDAO.deleteScore(id)) {
+                    JOptionPane.showMessageDialog(this, "삭제 성공");
+                    loadTable();
+                }
+            }
+        });
+
+        // 테이블 클릭 시 폼에 데이터 채우기
+        table.getSelectionModel().addListSelectionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                cbStudentNumber.setSelectedItem(model.getValueAt(row, 1).toString());
+                tfSubject.setText(model.getValueAt(row, 2).toString());
+                tfScore.setText(model.getValueAt(row, 3).toString());
+            }
+        });
+
+        setVisible(true);
+    }
+
+    private void loadStudentNumbers() {
+        cbStudentNumber.removeAllItems();  // 기존 아이템 삭제
+        List<String> studentNumbers = studentDAO.getAllStudentNumbers();
+        for (String num : studentNumbers) {
+            cbStudentNumber.addItem(num);
+        }
+    }
+
+    private void loadTable() {
+        model.setRowCount(0);
+        List<Score> list = scoreDAO.getAllScores();
+        for (Score s : list) {
+            model.addRow(new Object[]{
+                    s.getId(),
+                    s.getStudentNumber(),
+                    s.getSubject(),
+                    s.getScore(),
+                    convertToGrade(s.getScore())
+            });
+        }
+    }
+
+    private String convertToGrade(int score) {
+        if (score >= 95) return "A+";
+        else if (score >= 90) return "A";
+        else if (score >= 85) return "B+";
+        else if (score >= 80) return "B";
+        else if (score >= 75) return "C+";
+        else if (score >= 70) return "C";
+        else if (score >= 60) return "D";
+        else return "F";
+    }
+}

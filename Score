@@ -1,0 +1,32 @@
+package project1;
+
+public class Score {
+    private int id;
+    private String studentNumber;
+    private String subject;
+    private int score;
+
+    public Score(int id, String studentNumber, String subject, int score) {
+        this.id = id;
+        this.studentNumber = studentNumber;
+        this.subject = subject;
+        this.score = score;
+    }
+
+    public Score(String studentNumber, String subject, int score) {
+        this(0, studentNumber, subject, score);
+    }
+
+ // Getter/Setter
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getStudentNumber() { return studentNumber; }
+    public void setStudentNumber(String studentNumber) { this.studentNumber = studentNumber; }
+
+    public String getSubject() { return subject; }
+    public void setSubject(String subject) { this.subject = subject; }
+
+    public int getScore() { return score; }
+    public void setScore(int score) { this.score = score; }
+}

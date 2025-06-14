@@ -1,0 +1,42 @@
+package project1;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class MainForm extends JFrame {
+
+    public MainForm() {
+        setTitle("대학생 통합 관리 시스템 - 메인 화면");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new GridLayout(4, 1, 10, 10));
+
+        JLabel title = new JLabel("대학생 통합 관리 시스템", SwingConstants.CENTER);
+        title.setFont(new Font("맑은 고딕", Font.BOLD, 18));
+        add(title);
+
+        JButton studentBtn = new JButton("학생 정보 관리");
+        JButton scoreBtn = new JButton("성적 관리");
+        JButton attendanceBtn = new JButton("출결 관리");
+
+        add(studentBtn);
+        add(scoreBtn);
+        add(attendanceBtn);
+
+        // 버튼 이벤트 처리
+        studentBtn.addActionListener(e -> {
+            new StudentForm();  // 아직 구현 전
+        });
+
+        scoreBtn.addActionListener(e -> {
+            new ScoreForm();  // 아직 구현 전
+        });
+
+        attendanceBtn.addActionListener(e -> {
+            new AttendanceForm();  // 아직 구현 전
+        });
+
+        setVisible(true);
+    }
+}

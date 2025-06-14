@@ -1,0 +1,47 @@
+package project1;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class LoginForm extends JFrame {
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private LoginDAO loginDAO = new LoginDAO();
+
+    public LoginForm() {
+        setTitle("로그인");
+        setSize(350, 200);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new GridLayout(4, 1));
+
+        usernameField = new JTextField();
+        passwordField = new JPasswordField();
+        JButton loginBtn = new JButton("로그인");
+
+        add(new JLabel("아이디:"));
+        add(usernameField);
+        add(new JLabel("비밀번호:"));
+        add(passwordField);
+        add(loginBtn);
+
+        loginBtn.addActionListener(e -> {
+            String user = usernameField.getText().trim();
+            String pass = new String(passwordField.getPassword()).trim();
+
+            if (loginDAO.login(user, pass)) {
+                JOptionPane.showMessageDialog(this, "로그인 성공!");
+                new MainForm(); // 메인화면 열기
+                dispose();      // 로그인 창 닫기
+            } else {
+                JOptionPane.showMessageDialog(this, "로그인 실패: 아이디 또는 비밀번호 오류");
+            }
+        });
+
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(LoginForm::new);
+    }
+}

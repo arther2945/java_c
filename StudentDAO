@@ -1,0 +1,102 @@
+package project1;
+
+import java.sql.*;
+import java.util.*;
+
+public class StudentDAO {
+    private Connection conn;
+    private PreparedStatement pstmt;
+    private ResultSet rs;
+
+    private void connect() throws SQLException {
+        conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_c", "root", "rootroot");
+    }
+
+    public boolean insertStudent(Student s) {
+        String sql = "INSERT INTO students VALUES (?, ?, ?, ?)";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, s.getStudentNumber());
+            pstmt.setString(2, s.getName());
+            pstmt.setString(3, s.getMajor());
+            pstmt.setInt(4, s.getYear());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); return false;
+        } finally { close(); }
+    }
+
+    public List<Student> getAllStudents() {
+        List<Student> list = new ArrayList<>();
+        String sql = "SELECT * FROM students";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                list.add(new Student(
+                    rs.getString("student_number"),
+                    rs.getString("name"),
+                    rs.getString("major"),
+                    rs.getInt("year")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally { close(); }
+        return list;
+    }
+    public List<String> getAllStudentNumbers() {
+        List<String> studentNumbers = new ArrayList<>();
+        String sql = "SELECT student_number FROM students";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                studentNumbers.add(rs.getString("student_number"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            close();
+        }
+        return studentNumbers;
+    }
+
+    public boolean updateStudent(Student s) {
+        String sql = "UPDATE students SET name=?, major=?, year=? WHERE student_number=?";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, s.getName());
+            pstmt.setString(2, s.getMajor());
+            pstmt.setInt(3, s.getYear());
+            pstmt.setString(4, s.getStudentNumber());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); return false;
+        } finally { close(); }
+    }
+
+    public boolean deleteStudent(String studentNumber) {
+        String sql = "DELETE FROM students WHERE student_number=?";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, studentNumber);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); return false;
+        } finally { close(); }
+    }
+
+    private void close() {
+        try {
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+            if (conn != null) conn.close();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+}
