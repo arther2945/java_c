@@ -1,0 +1,87 @@
+package project1;
+
+import java.sql.*;
+import java.util.*;
+
+public class ScoreDAO {
+    private Connection conn;
+    private PreparedStatement pstmt;
+    private ResultSet rs;
+
+    private void connect() throws SQLException {
+        conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_c", "root", "rootroot");
+    }
+
+    public boolean insertScore(Score score) {
+        String sql = "INSERT INTO scores (student_number, subject, score) VALUES (?, ?, ?)";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, score.getStudentNumber());
+            pstmt.setString(2, score.getSubject());
+            pstmt.setInt(3, score.getScore());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); return false;
+        } finally { close(); }
+    }
+
+    public List<Score> getAllScores() {
+        List<Score> list = new ArrayList<>();
+        String sql = "SELECT * FROM scores";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                list.add(new Score(
+                    rs.getInt("id"),
+                    rs.getString("student_number"),
+                    rs.getString("subject"),
+                    rs.getInt("score")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally { close(); }
+        return list;
+    }
+
+    public boolean deleteScore(int id) {
+        String sql = "DELETE FROM scores WHERE id=?";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, id);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); return false;
+        } finally { close(); }
+    }
+
+ // ✅ 수정 기능 추가
+    public boolean updateScore(Score score) {
+        String sql = "UPDATE scores SET student_number=?, subject=?, score=? WHERE id=?";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, score.getStudentNumber());
+            pstmt.setString(2, score.getSubject());
+            pstmt.setInt(3, score.getScore());
+            pstmt.setInt(4, score.getId());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); return false;
+        } finally { close(); }
+    }
+    
+    private void close() {
+        try {
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+            if (conn != null) conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}

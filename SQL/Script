@@ -1,0 +1,35 @@
+-- 사용자 로그인
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE,
+    password VARCHAR(100)
+);
+
+-- 학생 정보
+CREATE TABLE students (
+    student_number VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(50),
+    major VARCHAR(50),
+    year INT
+);
+
+-- 성적 정보
+CREATE TABLE scores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_number VARCHAR(20),
+    subject VARCHAR(50),
+    score INT,
+    FOREIGN KEY (student_number) REFERENCES students(student_number) ON DELETE cascade
+);
+
+-- 출결 정보
+CREATE TABLE attendance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_number VARCHAR(20),
+    date DATE,
+    status ENUM('출석', '결석', '지각'),
+    FOREIGN KEY (student_number) REFERENCES students(student_number)
+);
+-- 테스트 계정 추가
+INSERT INTO users (username, password) VALUES ('admin', 'admin123');
+

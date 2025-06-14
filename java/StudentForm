@@ -1,0 +1,113 @@
+package project1;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.List;
+
+public class StudentForm extends JFrame {
+    private JTextField tfNumber, tfName, tfMajor, tfYear;
+    private JTable table;
+    private DefaultTableModel model;
+    private StudentDAO studentDAO = new StudentDAO();
+
+    public StudentForm() {
+        setTitle("학생 정보 관리");
+        setSize(600, 400);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        // 입력 폼
+        JPanel inputPanel = new JPanel(new GridLayout(5, 2));
+        tfNumber = new JTextField();
+        tfName = new JTextField();
+        tfMajor = new JTextField();
+        tfYear = new JTextField();
+        inputPanel.add(new JLabel("학번"));
+        inputPanel.add(tfNumber);
+        inputPanel.add(new JLabel("이름"));
+        inputPanel.add(tfName);
+        inputPanel.add(new JLabel("전공"));
+        inputPanel.add(tfMajor);
+        inputPanel.add(new JLabel("학년"));
+        inputPanel.add(tfYear);
+
+        // 버튼
+        JPanel btnPanel = new JPanel();
+        JButton addBtn = new JButton("등록");
+        JButton updateBtn = new JButton("수정");
+        JButton deleteBtn = new JButton("삭제");
+        btnPanel.add(addBtn);
+        btnPanel.add(updateBtn);
+        btnPanel.add(deleteBtn);
+
+        // 테이블
+        model = new DefaultTableModel(new String[]{"학번", "이름", "전공", "학년"}, 0);
+        table = new JTable(model);
+        JScrollPane scrollPane = new JScrollPane(table);
+
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(inputPanel, BorderLayout.NORTH);
+        topPanel.add(btnPanel, BorderLayout.SOUTH);
+
+        add(topPanel, BorderLayout.NORTH);  // 상단 입력 + 버튼
+        add(scrollPane, BorderLayout.CENTER); // 중앙 테이블
+
+        // 초기 데이터 로딩
+        loadTable();
+
+        // 등록
+        addBtn.addActionListener(e -> {
+            Student s = new Student(tfNumber.getText(), tfName.getText(), tfMajor.getText(), Integer.parseInt(tfYear.getText()));
+            if (studentDAO.insertStudent(s)) {
+                JOptionPane.showMessageDialog(this, "등록 성공");
+                loadTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "등록 실패");
+            }
+        });
+
+        // 수정
+        updateBtn.addActionListener(e -> {
+            Student s = new Student(tfNumber.getText(), tfName.getText(), tfMajor.getText(), Integer.parseInt(tfYear.getText()));
+            if (studentDAO.updateStudent(s)) {
+                JOptionPane.showMessageDialog(this, "수정 성공");
+                loadTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "수정 실패");
+            }
+        });
+
+        // 삭제
+        deleteBtn.addActionListener(e -> {
+            String id = tfNumber.getText();
+            if (studentDAO.deleteStudent(id)) {
+                JOptionPane.showMessageDialog(this, "삭제 성공");
+                loadTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "삭제 실패");
+            }
+        });
+
+        // 테이블 클릭 시 텍스트 필드 채우기
+        table.getSelectionModel().addListSelectionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                tfNumber.setText(model.getValueAt(row, 0).toString());
+                tfName.setText(model.getValueAt(row, 1).toString());
+                tfMajor.setText(model.getValueAt(row, 2).toString());
+                tfYear.setText(model.getValueAt(row, 3).toString());
+            }
+        });
+
+        setVisible(true);
+    }
+
+    private void loadTable() {
+        model.setRowCount(0);
+        List<Student> students = studentDAO.getAllStudents();
+        for (Student s : students) {
+            model.addRow(new Object[]{s.getStudentNumber(), s.getName(), s.getMajor(), s.getYear()});
+        }
+    }
+}

@@ -1,0 +1,87 @@
+package project1;
+
+import java.sql.*;
+import java.util.*;
+
+public class AttendanceDAO {
+    private Connection conn;
+    private PreparedStatement pstmt;
+    private ResultSet rs;
+
+    private void connect() throws SQLException {
+        conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_c", "root", "rootroot");
+    }
+
+    public boolean insertAttendance(Attendance a) {
+        String sql = "INSERT INTO attendance (student_number, date, status) VALUES (?, ?, ?)";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, a.getStudentNumber());
+            pstmt.setString(2, a.getDate());
+            pstmt.setString(3, a.getStatus());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); return false;
+        } finally { close(); }
+    }
+
+    public List<Attendance> getAllAttendance() {
+        List<Attendance> list = new ArrayList<>();
+        String sql = "SELECT * FROM attendance";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                list.add(new Attendance(
+                    rs.getInt("id"),
+                    rs.getString("student_number"),
+                    rs.getString("date"),
+                    rs.getString("status")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally { close(); }
+        return list;
+    }
+
+    public boolean deleteAttendance(int id) {
+        String sql = "DELETE FROM attendance WHERE id=?";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, id);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); return false;
+        } finally { close(); }
+    }
+    
+ // ✅ 수정 기능 추가
+    public boolean updateAttendance(Attendance a) {
+        String sql = "UPDATE attendance SET student_number=?, date=?, status=? WHERE id=?";
+        try {
+            connect();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, a.getStudentNumber());
+            pstmt.setString(2, a.getDate());
+            pstmt.setString(3, a.getStatus());
+            pstmt.setInt(4, a.getId());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); return false;
+        } finally { close(); }
+    }
+
+    private void close() {
+        try {
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+            if (conn != null) conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}

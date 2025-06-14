@@ -1,0 +1,140 @@
+package project1;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.List;
+
+public class AttendanceForm extends JFrame {
+    private JComboBox<String> cbStudentNumber;
+    private JTextField tfDate;
+    private JComboBox<String> cbStatus;
+    private JTable table;
+    private DefaultTableModel model;
+    private AttendanceDAO attendanceDAO = new AttendanceDAO();
+    private StudentDAO studentDAO = new StudentDAO();
+
+    public AttendanceForm() {
+        setTitle("출결 관리");
+        setSize(600, 400);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        JPanel inputPanel = new JPanel(new GridLayout(4, 2));
+
+        cbStudentNumber = new JComboBox<>();
+        tfDate = new JTextField();
+        cbStatus = new JComboBox<>(new String[]{"출석", "지각", "결석"});
+
+        loadStudentNumbers();
+
+        inputPanel.add(new JLabel("학번"));
+        inputPanel.add(cbStudentNumber);
+        inputPanel.add(new JLabel("날짜 (YYYY-MM-DD)"));
+        inputPanel.add(tfDate);
+        inputPanel.add(new JLabel("상태"));
+        inputPanel.add(cbStatus);
+
+        JPanel btnPanel = new JPanel();
+        JButton addBtn = new JButton("등록");
+        JButton updateBtn = new JButton("수정");
+        JButton deleteBtn = new JButton("삭제");
+        btnPanel.add(addBtn);
+        btnPanel.add(updateBtn);
+        btnPanel.add(deleteBtn);
+
+        model = new DefaultTableModel(new String[]{"ID", "학번", "날짜", "상태"}, 0);
+        table = new JTable(model);
+        JScrollPane scrollPane = new JScrollPane(table);
+
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(inputPanel, BorderLayout.NORTH);
+        topPanel.add(btnPanel, BorderLayout.SOUTH);
+
+        add(topPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+
+        loadTable();
+
+        addBtn.addActionListener(e -> {
+            String studentNumber = (String) cbStudentNumber.getSelectedItem();
+            String date = tfDate.getText();
+            String status = (String) cbStatus.getSelectedItem();
+            Attendance a = new Attendance(studentNumber, date, status);
+            if (attendanceDAO.insertAttendance(a)) {
+                JOptionPane.showMessageDialog(this, "출결 등록 성공");
+                loadTable();
+            } else {
+                JOptionPane.showMessageDialog(this, "등록 실패");
+            }
+        });
+
+        updateBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                try {
+                    int id = Integer.parseInt(model.getValueAt(row, 0).toString());
+                    String studentNumber = (String) cbStudentNumber.getSelectedItem();
+                    String date = tfDate.getText();
+                    String status = (String) cbStatus.getSelectedItem();
+                    Attendance a = new Attendance(id, studentNumber, date, status);
+                    if (attendanceDAO.updateAttendance(a)) {
+                        JOptionPane.showMessageDialog(this, "수정 성공");
+                        loadTable();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "수정 실패");
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "잘못된 데이터입니다.");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "수정할 항목을 선택하세요.");
+            }
+        });
+
+        deleteBtn.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                int id = Integer.parseInt(model.getValueAt(row, 0).toString());
+                if (attendanceDAO.deleteAttendance(id)) {
+                    JOptionPane.showMessageDialog(this, "삭제 성공");
+                    loadTable();
+                } else {
+                    JOptionPane.showMessageDialog(this, "삭제 실패");
+                }
+            }
+        });
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                cbStudentNumber.setSelectedItem(model.getValueAt(row, 1).toString());
+                tfDate.setText(model.getValueAt(row, 2).toString());
+                cbStatus.setSelectedItem(model.getValueAt(row, 3).toString());
+            }
+        });
+
+        setVisible(true);
+    }
+
+    private void loadStudentNumbers() {
+        cbStudentNumber.removeAllItems();
+        List<String> studentNumbers = studentDAO.getAllStudentNumbers();
+        for (String num : studentNumbers) {
+            cbStudentNumber.addItem(num);
+        }
+    }
+
+    private void loadTable() {
+        model.setRowCount(0);
+        List<Attendance> list = attendanceDAO.getAllAttendance();
+        for (Attendance a : list) {
+            model.addRow(new Object[]{
+                    a.getId(),
+                    a.getStudentNumber(),
+                    a.getDate(),
+                    a.getStatus()
+            });
+        }
+    }
+}
